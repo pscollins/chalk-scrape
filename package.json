@@ -1,0 +1,25 @@
+{
+  "name": "chalk-scrape",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pscollins/chalk-scrape.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/pscollins/chalk-scrape/issues"
+  },
+  "homepage": "https://github.com/pscollins/chalk-scrape",
+  "dependencies": {
+    "phantom": "^0.7.2",
+    "readline-sync": "^0.4.10",
+    "request": "^2.51.0",
+    "tough-cookie": "^0.12.1"
+  }
+}
