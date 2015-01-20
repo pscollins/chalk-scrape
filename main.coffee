@@ -49,19 +49,16 @@ request.post(
     if error?
         console.log "Something went wrong. Error: #{error}"
     else
-        phantom.create (ph) ->
-            addCookie = (cookie) ->
-                console.log "Parsing #{cookie} for ph #{ph}"
-                ph.addCookie (new ->
-                    @[if k == "key" then "name" else k] = v for own k, v of cookie
-                    @), (status) -> console.log "Added? #{status}"
-            addCookie c for c in jar.getCookies url
-            ph.get "cookies", (cookies) -> console.log "Cookies set: #{cookies}"
-            ph.createPage (page) ->
-                # page.onResourceError = (resourceError) ->
-                #     page.errorString = resourceError.errorString
-                #     page.errorURL = resourceError.url
-                doCrawl = (url, depth) ->
+        crawl = (url, depth) ->
+            phantom.create (ph) ->
+                addCookie = (cookie) ->
+                    console.log "Parsing #{cookie} for ph #{ph}"
+                    ph.addCookie (new ->
+                        @[if k == "key" then "name" else k] = v for own k, v of cookie
+                        @), (status) -> console.log "Added? #{status}"
+                addCookie c for c in jar.getCookies url
+                ph.get "cookies", (cookies) -> console.log "Cookies set: #{cookies}"
+                ph.createPage (page) ->
                     console.log "Crawling #{url}, depth = #{depth}"
                     if depth >= maxDepth
                         return
@@ -73,5 +70,5 @@ request.post(
                         page.evaluate (-> el.href for el in document.querySelectorAll 'a'), (result) ->
                                 console.log "Got children: #{result}"
                                 crawl child, depth + 1 for child in result
-                crawl toScrape, 0
+        crawl toScrape, 0
 )
