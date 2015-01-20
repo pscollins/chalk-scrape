@@ -18,16 +18,19 @@ makeParams = (user, pass) ->
     new_loc: ""
 
 mergeCookies = (cookies, ph) ->
+    console.log "Got ph #{ph}"
     parseCookie = (cookie) ->
-        console.log "Parsing #{cookie}"
+        console.log "Parsing #{cookie} for ph #{ph}"
         new ->
             @[if k == "key" then "name" else k] = v for own k, v of cookie
             @
-
-    ph.set("cookies", parseCookie c for c in cookies)
-
+    # ph.set("cookies", parseCookie c for c in cookies)
 
 
+printProps = (obj) ->
+    console.log "Props of #{obj}"
+    for k, v of obj
+        console.log "Key: #{k}, value: #{v}"
 
 # user = read.question "Username? "
 user = process.argv[2]
@@ -47,13 +50,25 @@ request.post(
         console.log "Something went wrong. Error: #{error}"
     else
         phantom.create (ph) ->
+            addCookie = (cookie) ->
+                console.log "Parsing #{cookie} for ph #{ph}"
+                ph.addCookie (new ->
+                    @[if k == "key" then "name" else k] = v for own k, v of cookie
+                    @), (status) -> console.log "Added? #{status}"
+            addCookie c for c in jar.getCookies url
+            ph.get "cookies", (cookies) -> console.log "Cookies set: #{cookies}"
             ph.createPage (page) ->
-                crawl = (url, depth) ->
+                # page.onResourceError = (resourceError) ->
+                #     page.errorString = resourceError.errorString
+                #     page.errorURL = resourceError.url
+                doCrawl = (url, depth) ->
                     console.log "Crawling #{url}, depth = #{depth}"
                     if depth >= maxDepth
                         return
                     page.open url, (status) ->
                         console.log "Opened #{url}. Status: #{status}"
+                        page.get "content", (content) ->
+                            console.log "Page content: #{content}"
                         page.render "pictures/#{url}.png"
                         page.evaluate (-> el.href for el in document.querySelectorAll 'a'), (result) ->
                                 console.log "Got children: #{result}"

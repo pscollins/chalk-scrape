@@ -17,7 +17,7 @@
   },
   "homepage": "https://github.com/pscollins/chalk-scrape",
   "dependencies": {
-    "phantom": "^0.7.2",
+    "phantom": "git+https://github.com/sgentle/phantomjs-node",
     "readline-sync": "^0.4.10",
     "request": "^2.51.0",
     "tough-cookie": "^0.12.1"
