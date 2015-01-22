@@ -7,7 +7,7 @@ url = 'https://chalk.uchicago.edu/webapps/login/'
 jar = request.jar()
 
 if process.argv.length < 5
-  console.log "Usage: #{process.argv[1].split('/').pop()} <username> <depth> <chalk URL>"
+  console.log "Usage: #{process.argv[1].split('/').pop()} <username> <depth> <chalk URL> <selector?>"
   process.exit 1
 
 makeParams = (user, pass) ->
@@ -36,6 +36,11 @@ printProps = (obj) ->
 user = process.argv[2]
 maxDepth = process.argv[3]
 toScrape = process.argv[4]
+# NB: grades are under #grades_wrapper
+selector = if process.argv.length == 6 then "#{process.argv[5]} " else ""
+
+class PageFilters
+    constructor: (@selector, @searchRe) ->
 
 password = read.question("Password? ", noEchoBack: true)
 
@@ -49,7 +54,7 @@ request.post(
     if error?
         console.log "Something went wrong. Error: #{error}"
     else
-        crawl = (url, depth) ->
+        crawl = (url, depth, selector="") ->
             phantom.create (ph) ->
                 addCookie = (cookie) ->
                     console.log "Parsing #{cookie} for ph #{ph}"
@@ -61,14 +66,19 @@ request.post(
                 ph.createPage (page) ->
                     console.log "Crawling #{url}, depth = #{depth}"
                     if depth >= maxDepth
-                        return
+                        ph.exit()
                     page.open url, (status) ->
                         console.log "Opened #{url}. Status: #{status}"
-                        page.get "content", (content) ->
-                            console.log "Page content: #{content}"
+                        if status == "fail"
+                            ph.exit()
                         page.render "pictures/#{url}.png"
-                        page.evaluate (-> el.href for el in document.querySelectorAll 'a'), (result) ->
-                                console.log "Got children: #{result}"
-                                crawl child, depth + 1 for child in result
-        crawl toScrape, 0
+                        page.getContent (res) -> console.log "Content: #{res}"
+                        docCallback = (selector) -> el.href for el in document.querySelectorAll "#{selector}a"
+                        resCallback = (result) ->
+                            console.log "Called with selector #{selector}, qs = #{selector}a"
+                            console.log "Got children: #{result}"
+                            crawl child, depth + 1 for child in result when /https/.test child
+                            ph.exit()
+                        page.evaluate docCallback, resCallback, selector
+        crawl toScrape, 0, "#grades_wrapper "
 )
